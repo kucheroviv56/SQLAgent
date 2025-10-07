@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  demo-db:
+    image: postgres:17
+    container_name: demo-db
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build: .
+    container_name: sql-agent-api
+    depends_on:
+      - demo-db
+    ports:
+      - "8000:8000"
+    environment:
+      DB_USER: ai_readonly
+      DB_PASSWORD: supersecret
+      DB_HOST: demo-db
+      DB_PORT: 5432
+      DB_NAME: demo
+    command: uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload
+
+
