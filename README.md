@@ -32,11 +32,40 @@ api — API на FastAPI
 
 docker exec -i demo-db psql -U demo -d demo < dump.sql
 
-4. Включить VPN
+4. Задать права пользователя ai-readonly
+
+docker exec -it demo-db psql -U demo -d demo
+
+
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ai_readonly') THEN
+      CREATE ROLE ai_readonly WITH LOGIN PASSWORD 'supersecret';
+   END IF;
+END
+$$;
+
+GRANT CONNECT ON DATABASE demo TO ai_readonly;
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN SELECT nspname FROM pg_namespace 
+             WHERE nspname NOT IN ('pg_catalog','information_schema') LOOP
+        EXECUTE format('GRANT USAGE ON SCHEMA %I TO ai_readonly;', r.nspname);
+        EXECUTE format('GRANT SELECT ON ALL TABLES IN SCHEMA %I TO ai_readonly;', r.nspname);
+        EXECUTE format('GRANT SELECT ON ALL SEQUENCES IN SCHEMA %I TO ai_readonly;', r.nspname);
+        EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I GRANT SELECT ON TABLES TO ai_readonly;', r.nspname);
+    END LOOP;
+END$$;
+
+
+5. Включить VPN
 
 Для корректной работы с OpenAI API требуется активное VPN-соединение.
 
-5. Проверка API
+6. Проверка API
 
 После запуска сервис будет доступен по адресу:
 

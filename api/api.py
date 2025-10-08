@@ -1,13 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from agent.agent import run_sql_agent
 from api.schemas import QueryRequest, QueryResponse  
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
-logger = logging.getLogger(__name__)
+from api.log_config import logger
 
 app = FastAPI(title="SQL Agent API", version="1.0")
 
